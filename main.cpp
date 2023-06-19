@@ -15,3 +15,56 @@ receiving child should populate the files with their corresponding received cont
 After these steps, the directories d1 and d2 should be identical in terms of the list of files, and the contents of the files.
 In your code you should not make any assumption about the size of files.
 */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <iostream>
+#include <dirent.h>
+
+int main(int argc, char* argv[]) {
+  
+    DIR* directory;
+    struct dirent* entry;
+
+    // Open the current directory
+    directory = opendir(".");
+
+    if (directory) {
+        // Iterate over each entry in the directory
+        while ((entry = readdir(directory)) != nullptr) {
+            std::cout << entry->d_name << std::endl;
+        }
+
+        // Close the directory
+        closedir(directory);
+    } else {
+        std::cerr << "Failed to open the directory." << std::endl;
+        return 1;
+    }
+
+    return 0;
+}
+
+
+/*
+    const char* directoryPath = "/home/vmoon/d1"; 
+
+    DIR* directory;
+    struct dirent* entry;
+
+     // Open the specified directory
+    directory = opendir(directoryPath);
+
+     if (directory) {
+        // Iterate over each entry in the directory
+        while ((entry = readdir(directory)) != nullptr) {
+            std::cout << entry->d_name << std::endl;
+        }
+
+        // Close the directory
+        closedir(directory);
+    } else {
+        std::cerr << "Failed to open the directory." << std::endl;
+        return 1;
+    }
+*/
