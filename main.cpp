@@ -36,10 +36,12 @@ int main(int argc, char * argv[]) {
   child1 = fork();
 
   if (child1 == 0) {
-    std::cout << "we are in the child process #1" << std::endl;
-    getpid();
+    std::cout << "we are in the child process #1 \n" << std::endl;
+   
 
     const char * directoryPathforD1 = "/workspaces/CS4348_Project1/Directory1";
+
+
     DIR * directory1;
     struct dirent * entry;
     std::vector<std::string> fileList;
@@ -48,8 +50,8 @@ int main(int argc, char * argv[]) {
     directory1 = opendir(directoryPathforD1);
 
     if (directory1 == nullptr) {
-      std::cout << "Failed to open directory." << std::endl;
-      return 1;
+      std::cerr << "Failed to open directory." << std::endl;
+      exit(1);
     }
 
     while((entry = readdir(directory1)) != nullptr){
@@ -59,11 +61,11 @@ int main(int argc, char * argv[]) {
       }
 
       //getting the file name
-      std::string fileName = entry ->d_name;
+      std::string fileName = entry->d_name;
       fileList.push_back(fileName);
 
       //this will opena nd read the conents of the files
-      std::ifstream file("/workspaces/CS4348_Project1/Directory1" + fileName);
+      std::ifstream file("/workspaces/CS4348_Project1/Directory1/" + fileName);
       if(file.is_open()){
         std::string line;
         std::cout << "contents of " << fileName << ":"<< std::endl;
@@ -96,7 +98,7 @@ int main(int argc, char * argv[]) {
 
     if (child2 == 0) {
       std::cout << "we are in the child process #2" << std::endl;
-      getpid();
+      
 
       const char * directoryPathforD2 = "/workspaces/CS4348_Project1/Directory2";
       DIR * directory2;
