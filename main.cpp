@@ -20,70 +20,107 @@ In your code you should not make any assumption about the size of files.
 #include <unistd.h>
 #include <iostream>
 #include <dirent.h>
+#include <time.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <vector>
+#include <fstream>
 
 
+int main(int argc, char * argv[]) {
 
+  pid_t child1, child2;
 
-int main(int argc, char* argv[]) {
+  child1 = fork();
 
-    //this strip will successfully open directory #1, this is the pwd for D1
-   
+  if (child1 == 0) {
+    std::cout << "we are in the child process #1" << std::endl;
+    getpid();
 
-    pid_t pid = fork();
-
-
-
-
-if (pid < 0){
-    std::cerr << "Fork failed" << std::endl;
-    return 1;
-}
-else if (pid == 0){
-    std::cout << "we are in the child process" << std::endl;
+    const char * directoryPathforD1 = "/workspaces/CS4348_Project1/Directory1";
+    DIR * directory1;
+    struct dirent * entry;
+    std::vector<std::string> fileList;
     
-
-    const char* directoryPathforD1 = "/workspaces/CS4348_Project1/Directory1"; 
-    DIR* directory1;
 
     directory1 = opendir(directoryPathforD1);
-    
+
     if (directory1 == nullptr) {
-        std::cout << "Failed to open directory." << std::endl;
-        return 1;
+      std::cout << "Failed to open directory." << std::endl;
+      return 1;
     }
 
-    dirent* file;
-    while ((file = readdir(directory1)) != nullptr) {
-        std::cout << file->d_name << std::endl;
+    while((entry = readdir(directory1)) != nullptr){
+      // this will skip the deault '.' and '..' entries
+      if (strcmp(entry->d_name, ".") == 0 || strcmp(entry ->d_name, "..") ==0){
+        continue;
+      }
+
+      //getting the file name
+      std::string fileName = entry ->d_name;
+      fileList.push_back(fileName);
+
+      //this will opena nd read the conents of the files
+      std::ifstream file("/workspaces/CS4348_Project1/Directory1" + fileName);
+      if(file.is_open()){
+        std::string line;
+        std::cout << "contents of " << fileName << ":"<< std::endl;
+        while (std::getline(file,line)){
+          std::cout << line <<std::endl;
+        }
+        file.close();
+        std::cout << std::endl;
+      } else{
+        std::cerr << "failed to open file: " << fileName << std::endl;
+      }
     }
+    /* this does the cout of the name of the files to make sure it was working
+    dirent * file;
+    while ((file = readdir(directory1)) != nullptr) {
+      std::cout << file -> d_name << std::endl;
+    }
+    */
 
     closedir(directory1);
-}
-else {
-       std::cout << "we are in the parent process" << std::endl;
 
+    std::cout << "list of files in directory 1" << std::endl;
+    for(const auto& fileName : fileList){
+      std::cout << fileName << std::endl;
+    }
+    std::cout << std::endl;
 
-       const char* directoryPathforD2 = "/workspaces/CS4348_Project1/Directory2";
-       DIR* directory2;
+  } else {
+    child2 = fork();
 
-    directory2 = opendir(directoryPathforD2);
-    
-    if (directory2 == nullptr) {
+    if (child2 == 0) {
+      std::cout << "we are in the child process #2" << std::endl;
+      getpid();
+
+      const char * directoryPathforD2 = "/workspaces/CS4348_Project1/Directory2";
+      DIR * directory2;
+
+      directory2 = opendir(directoryPathforD2);
+
+      if (directory2 == nullptr) {
         std::cout << "Failed to open directory." << std::endl;
         return 1;
+      }
+
+      dirent * file;
+      while ((file = readdir(directory2)) != nullptr) {
+        std::cout << file -> d_name << std::endl;
+      }
+
+      closedir(directory2);
+
+    } else {
+      waitpid(child1, NULL, 0);
+      waitpid(child2, NULL, 0);
+
     }
-
-    dirent* file;
-    while ((file = readdir(directory2)) != nullptr) {
-        std::cout << file->d_name << std::endl;
-    }
-
-    closedir(directory2);
-
-
-}
-
-    
+  }
 }
 
 /*
@@ -110,7 +147,6 @@ else {
   
     return 0;
     */
-
 
 /*
     const char* directoryPath = "/home/vmoon/d1"; 
