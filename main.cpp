@@ -22,7 +22,31 @@ In your code you should not make any assumption about the size of files.
 #include <dirent.h>
 
 int main(int argc, char* argv[]) {
-  
+
+    //this strip will successfully open directory #1, this is the pwd for D1
+    const char* directoryPathforD1 = "/workspaces/CS4348_Project1/Directory1"; 
+
+    DIR* directory;
+    struct dirent* entry;
+
+
+     fork();
+     // Open the specified directory
+    directory = opendir(directoryPathforD1);
+   
+     if (directory) {
+        // Iterate over each entry in the directory
+        while ((entry = readdir(directory)) != nullptr) {
+            std::cout << entry->d_name << std::endl;
+        }
+
+        // Close the directory
+        closedir(directory);
+    } else {
+        std::cerr << "Failed to open the directory." << std::endl;
+        return 1;
+    }
+  /*
     DIR* directory;
     struct dirent* entry;
 
@@ -41,7 +65,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Failed to open the directory." << std::endl;
         return 1;
     }
-
+*/
     return 0;
 }
 
