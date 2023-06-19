@@ -27,10 +27,7 @@ In your code you should not make any assumption about the size of files.
 int main(int argc, char* argv[]) {
 
     //this strip will successfully open directory #1, this is the pwd for D1
-    const char* directoryPathforD1 = "/workspaces/CS4348_Project1/Directory1"; 
-     DIR* directory;
-
-    directory = opendir(directoryPathforD1);
+   
 
     pid_t pid = fork();
 
@@ -44,21 +41,46 @@ if (pid < 0){
 else if (pid == 0){
     std::cout << "we are in the child process" << std::endl;
     
+
+    const char* directoryPathforD1 = "/workspaces/CS4348_Project1/Directory1"; 
+    DIR* directory1;
+
+    directory1 = opendir(directoryPathforD1);
     
-    if (directory == nullptr) {
+    if (directory1 == nullptr) {
         std::cout << "Failed to open directory." << std::endl;
         return 1;
     }
 
     dirent* file;
-    while ((file = readdir(directory)) != nullptr) {
+    while ((file = readdir(directory1)) != nullptr) {
         std::cout << file->d_name << std::endl;
     }
 
-    closedir(directory);
+    closedir(directory1);
 }
 else {
+       std::cout << "we are in the parent process" << std::endl;
+
+
+       const char* directoryPathforD2 = "/workspaces/CS4348_Project1/Directory2";
+       DIR* directory2;
+
+    directory2 = opendir(directoryPathforD2);
     
+    if (directory2 == nullptr) {
+        std::cout << "Failed to open directory." << std::endl;
+        return 1;
+    }
+
+    dirent* file;
+    while ((file = readdir(directory2)) != nullptr) {
+        std::cout << file->d_name << std::endl;
+    }
+
+    closedir(directory2);
+
+
 }
 
     
