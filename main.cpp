@@ -102,6 +102,8 @@ int main(int argc, char * argv[]) {
 
       const char * directoryPathforD2 = "/workspaces/CS4348_Project1/Directory2";
       DIR * directory2;
+      struct dirent*entry;
+      std::vector<std::string> fileList;
 
       directory2 = opendir(directoryPathforD2);
 
@@ -110,12 +112,45 @@ int main(int argc, char * argv[]) {
         return 1;
       }
 
+      while((entry = readdir(directory2)) != nullptr){
+      // this will skip the deault '.' and '..' entries
+      if (strcmp(entry->d_name, ".") == 0 || strcmp(entry ->d_name, "..") ==0){
+        continue;
+      }
+
+      //getting the file name
+      std::string fileName = entry->d_name;
+      fileList.push_back(fileName);
+
+      //this will opena nd read the conents of the files
+      std::ifstream file("/workspaces/CS4348_Project1/Directory2/" + fileName);
+      if(file.is_open()){
+        std::string line;
+        std::cout << "contents of " << fileName << ":"<< std::endl;
+        while (std::getline(file,line)){
+          std::cout << line <<std::endl;
+        }
+        file.close();
+        std::cout << std::endl;
+      } else{
+        std::cerr << "failed to open file: " << fileName << std::endl;
+      }
+    }
+
+      /*
       dirent * file;
       while ((file = readdir(directory2)) != nullptr) {
         std::cout << file -> d_name << std::endl;
       }
-
+      */
       closedir(directory2);
+
+
+      std::cout << "list of files in directory 2" << std::endl;
+    for(const auto& fileName : fileList){
+      std::cout << fileName << std::endl;
+    }
+    std::cout << std::endl;
 
     } else {
       waitpid(child1, NULL, 0);
