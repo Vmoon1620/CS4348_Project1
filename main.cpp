@@ -124,7 +124,7 @@ int main(int argc, char * argv[]) {
     for (const auto & fileName: recievedList) {
       std::ofstream file("/workspaces/CS4348_Project1/Directory2/" + fileName);
       if (file.is_open()) {
-        file << "File: " << fileName << "created by Child Proccess #1" << std::endl;
+        file << "File: " << fileName << " created by Child Proccess #1" << std::endl;
         file.close();
         std::cout << "File created: " << fileName << std::endl;
       } else {
@@ -206,9 +206,9 @@ int main(int argc, char * argv[]) {
       for (const auto & fileName: recievedList) {
         std::ofstream file("/workspaces/CS4348_Project1/Directory1/" + fileName);
         if (file.is_open()) {
-          file << "File: " << fileName << "created by Child Proccess #2" << std::endl;
+          file << "File: " << fileName << " created by Child Proccess #2" << std::endl;
           file.close();
-          std::cout << "Filee created: " << fileName << std::endl;
+          std::cout << "File created: " << fileName << std::endl;
         } else {
           std::cerr << "Failed to create file: " << fileName << std::endl;
         }

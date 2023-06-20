@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -Wall -Wextra -std=c++11
 
-TARGET = interprocess_communication
+TARGET = main
 
 all: $(TARGET)
 
