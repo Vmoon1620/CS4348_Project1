@@ -125,6 +125,19 @@ for (const auto& fileName : recievedList){
 }
 
 
+std::cout << "Child process #1 will create files from list of Child process #2 "<< std::endl;
+for (const auto& fileName : recievedList){
+  std::ofstream file("/workspaces/CS4348_Project1/Directory2/" + fileName);
+  if(file.is_open() ){
+    file << "File: " << fileName << "created by Child Proccess #1" << std::endl;
+    file.close();
+    std::cout << "File created: " << fileName << std::endl;
+  } else{
+    std::cerr << "Failed to create file: " << fileName <<std::endl;
+  }
+
+} 
+exit(0);
 
   } else {
     child2 = fork();
@@ -185,7 +198,7 @@ for (const auto& fileName : recievedList){
     }
     std::cout << std::endl;
 
-    close(pipe2[0]);
+close(pipe2[0]);
 write(pipe2[1], fileList.data(), fileList.size() * sizeof(std::string)); 
 //closes write again
 close(pipe2[1]);
@@ -201,14 +214,31 @@ for (const auto& fileName : recievedList){
   std::cout << fileName << std::endl;
 }
 
+
+std::cout << "Child process #2 will create files from list of Child process #1 "<< std::endl;
+for (const auto& fileName : recievedList){
+  std::ofstream file("/workspaces/CS4348_Project1/Directory1" + fileName);
+  if(file.is_open() ){
+    file << "File: " << fileName << "created by Child Proccess #2" << std::endl;
+    file.close();
+    std::cout << "Filee created: " << fileName << std::endl;
+  } else{
+    std::cerr << "Failed to create file: " << fileName <<std::endl;
+  }
+
+} 
+
+exit(0);
+
     } 
 
+      //closing out pipes
       close(pipe1[0]);
       close(pipe1[1]);
       close(pipe2[0]);
       close(pipe2[1]);
 
-      
+
       waitpid(child1, NULL, 0);
       waitpid(child2, NULL, 0);
 
