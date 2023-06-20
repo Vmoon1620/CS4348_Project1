@@ -217,7 +217,7 @@ for (const auto& fileName : recievedList){
 
 std::cout << "Child process #2 will create files from list of Child process #1 "<< std::endl;
 for (const auto& fileName : recievedList){
-  std::ofstream file("/workspaces/CS4348_Project1/Directory1" + fileName);
+  std::ofstream file("/workspaces/CS4348_Project1/Directory1/" + fileName);
   if(file.is_open() ){
     file << "File: " << fileName << "created by Child Proccess #2" << std::endl;
     file.close();
