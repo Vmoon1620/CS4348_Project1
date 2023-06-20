@@ -16,6 +16,10 @@ After these steps, the directories d1 and d2 should be identical in terms of the
 In your code you should not make any assumption about the size of files.
 */
 
+/*
+Prior to executing make sure to delete files that have been copied
+*/
+
 #include <stdio.h>
 #include <unistd.h>
 #include <iostream>
@@ -35,30 +39,27 @@ int main(int argc, char * argv[]) {
   int pipe1[2], pipe2[2];
 
   //creating pipe #1
-  if(pipe(pipe1) == -1){
-    std::cerr << "filaed to create pipe1" << std::endl;
+  if (pipe(pipe1) == -1) {
+    std::cerr << "Failed to create pipe1" << std::endl;
+    return 1;
+  }
+  //Creating pipe #2
+  if (pipe(pipe2) == -1) {
+    std::cerr << "Failed to create pipe #2" << std::endl;
     return 1;
   }
 
-  if(pipe(pipe2) == -1){
-    std::cerr << "failed to create pipe #2" << std::endl;
-    return 1;
-  }
-
-
+  // Forks first child process
   child1 = fork();
 
   if (child1 == 0) {
     std::cout << "we are in the child process #1 \n" << std::endl;
-   
 
     const char * directoryPathforD1 = "/workspaces/CS4348_Project1/Directory1";
 
-
     DIR * directory1;
     struct dirent * entry;
-    std::vector<std::string> fileList;
-    
+    std::vector < std::string > fileList;
 
     directory1 = opendir(directoryPathforD1);
 
@@ -67,89 +68,83 @@ int main(int argc, char * argv[]) {
       exit(1);
     }
 
-    while((entry = readdir(directory1)) != nullptr){
+    while ((entry = readdir(directory1)) != nullptr) {
       // this will skip the deault '.' and '..' entries
-      if (strcmp(entry->d_name, ".") == 0 || strcmp(entry ->d_name, "..") ==0){
+      if (strcmp(entry -> d_name, ".") == 0 || strcmp(entry -> d_name, "..") == 0) {
         continue;
       }
 
-      //getting the file name
-      std::string fileName = entry->d_name;
+      //Getting the file names
+      std::string fileName = entry -> d_name;
       fileList.push_back(fileName);
 
-      //this will opena nd read the conents of the files
+      //This will open and read the contents from Directory1
       std::ifstream file("/workspaces/CS4348_Project1/Directory1/" + fileName);
-      if(file.is_open()){
+      if (file.is_open()) {
         std::string line;
-        std::cout << "contents of " << fileName << ":"<< std::endl;
-        while (std::getline(file,line)){
-          std::cout << line <<std::endl;
+        std::cout << "contents of " << fileName << ":" << std::endl;
+        while (std::getline(file, line)) {
+          std::cout << line << std::endl;
         }
         file.close();
         std::cout << std::endl;
-      } else{
+      } else {
         std::cerr << "failed to open file: " << fileName << std::endl;
       }
     }
-    /* this does the cout of the name of the files to make sure it was working
-    dirent * file;
-    while ((file = readdir(directory1)) != nullptr) {
-      std::cout << file -> d_name << std::endl;
-    }
-    */
+
 
     closedir(directory1);
 
-    std::cout << "list of files in directory 1" << std::endl;
-    for(const auto& fileName : fileList){
+    std::cout << "List of files in directory 1" << std::endl;
+    for (const auto & fileName: fileList) {
       std::cout << fileName << std::endl;
     }
     std::cout << std::endl;
 
-//writing the list above to pipe #1
-//close the reading side 
-close(pipe1[0]);
-write(pipe1[1], fileList.data(), fileList.size() * sizeof(std::string)); 
-//closes write again
-close(pipe1[1]);
+    //Writing the list above to pipe #1
+    //close the reading side 
+    close(pipe1[0]);
+    write(pipe1[1], fileList.data(), fileList.size() * sizeof(std::string));
+    //closes write again
+    close(pipe1[1]);
 
-//read the list from pipe 2 from child process #2
-close(pipe2[1]);
-std::vector<std::string> recievedList(fileList.size());
-read(pipe2[0], recievedList.data(), recievedList.size() * sizeof(std::string));
-close(pipe2[0]);
+    //read the list from pipe 2 from child process #2
+    close(pipe2[1]);
+    std::vector < std::string > recievedList(fileList.size());
+    read(pipe2[0], recievedList.data(), recievedList.size() * sizeof(std::string));
+    close(pipe2[0]);
 
-std::cout << "Child process #1 recieved list from Child #2" << std::endl;
-for (const auto& fileName : recievedList){
-  std::cout << fileName << std::endl;
-}
+    std::cout << "Child process #1 recieved list from Child #2" << std::endl;
+    for (const auto & fileName: recievedList) {
+      std::cout << fileName << std::endl;
+    }
 
+    std::cout << "Child process #1 will create files from list of Child process #2 " << std::endl;
+    for (const auto & fileName: recievedList) {
+      std::ofstream file("/workspaces/CS4348_Project1/Directory2/" + fileName);
+      if (file.is_open()) {
+        file << "File: " << fileName << "created by Child Proccess #1" << std::endl;
+        file.close();
+        std::cout << "File created: " << fileName << std::endl;
+      } else {
+        std::cerr << "Failed to create file: " << fileName << std::endl;
+      }
 
-std::cout << "Child process #1 will create files from list of Child process #2 "<< std::endl;
-for (const auto& fileName : recievedList){
-  std::ofstream file("/workspaces/CS4348_Project1/Directory2/" + fileName);
-  if(file.is_open() ){
-    file << "File: " << fileName << "created by Child Proccess #1" << std::endl;
-    file.close();
-    std::cout << "File created: " << fileName << std::endl;
-  } else{
-    std::cerr << "Failed to create file: " << fileName <<std::endl;
-  }
-
-} 
-exit(0);
+    }
+    exit(0);
 
   } else {
+    //Forking into the second child process
     child2 = fork();
 
     if (child2 == 0) {
-      std::cout << "we are in the child process #2" << std::endl;
-      
+      std::cout << "We are in the child process #2" << std::endl;
 
       const char * directoryPathforD2 = "/workspaces/CS4348_Project1/Directory2";
       DIR * directory2;
-      struct dirent*entry;
-      std::vector<std::string> fileList;
+      struct dirent * entry;
+      std::vector < std::string > fileList;
 
       directory2 = opendir(directoryPathforD2);
 
@@ -158,93 +153,84 @@ exit(0);
         return 1;
       }
 
-      while((entry = readdir(directory2)) != nullptr){
-      // this will skip the deault '.' and '..' entries
-      if (strcmp(entry->d_name, ".") == 0 || strcmp(entry ->d_name, "..") ==0){
-        continue;
-      }
-
-      //getting the file name
-      std::string fileName = entry->d_name;
-      fileList.push_back(fileName);
-
-      //this will opena nd read the conents of the files
-      std::ifstream file("/workspaces/CS4348_Project1/Directory2/" + fileName);
-      if(file.is_open()){
-        std::string line;
-        std::cout << "contents of " << fileName << ":"<< std::endl;
-        while (std::getline(file,line)){
-          std::cout << line <<std::endl;
+      while ((entry = readdir(directory2)) != nullptr) {
+        // this will skip the deault '.' and '..' entries
+        if (strcmp(entry -> d_name, ".") == 0 || strcmp(entry -> d_name, "..") == 0) {
+          continue;
         }
-        file.close();
-        std::cout << std::endl;
-      } else{
-        std::cerr << "failed to open file: " << fileName << std::endl;
-      }
-    }
 
-      /*
-      dirent * file;
-      while ((file = readdir(directory2)) != nullptr) {
-        std::cout << file -> d_name << std::endl;
+        //Getting the file name
+        std::string fileName = entry -> d_name;
+        fileList.push_back(fileName);
+
+        //This will open and read the conents from directory 2
+        std::ifstream file("/workspaces/CS4348_Project1/Directory2/" + fileName);
+        if (file.is_open()) {
+          std::string line;
+          std::cout << "contents of " << fileName << ":" << std::endl;
+          while (std::getline(file, line)) {
+            std::cout << line << std::endl;
+          }
+          file.close();
+          std::cout << std::endl;
+        } else {
+          std::cerr << "failed to open file: " << fileName << std::endl;
+        }
       }
-      */
+
       closedir(directory2);
 
+      std::cout << "List of files in directory 2" << std::endl;
+      for (const auto & fileName: fileList) {
+        std::cout << fileName << std::endl;
+      }
+      std::cout << std::endl;
 
-      std::cout << "list of files in directory 2" << std::endl;
-    for(const auto& fileName : fileList){
-      std::cout << fileName << std::endl;
-    }
-    std::cout << std::endl;
-
-close(pipe2[0]);
-write(pipe2[1], fileList.data(), fileList.size() * sizeof(std::string)); 
-//closes write again
-close(pipe2[1]);
-
-//read the list from pipe 2 from child process #2
-close(pipe1[1]);
-std::vector<std::string> recievedList(fileList.size());
-read(pipe1[0], recievedList.data(), recievedList.size() * sizeof(std::string));
-close(pipe1[0]);
-
-std::cout << "Child process #2 recieved list from Child #1" << std::endl;
-for (const auto& fileName : recievedList){
-  std::cout << fileName << std::endl;
-}
-
-
-std::cout << "Child process #2 will create files from list of Child process #1 "<< std::endl;
-for (const auto& fileName : recievedList){
-  std::ofstream file("/workspaces/CS4348_Project1/Directory1/" + fileName);
-  if(file.is_open() ){
-    file << "File: " << fileName << "created by Child Proccess #2" << std::endl;
-    file.close();
-    std::cout << "Filee created: " << fileName << std::endl;
-  } else{
-    std::cerr << "Failed to create file: " << fileName <<std::endl;
-  }
-
-} 
-
-exit(0);
-
-    } 
-
-      //closing out pipes
-      close(pipe1[0]);
-      close(pipe1[1]);
       close(pipe2[0]);
+      write(pipe2[1], fileList.data(), fileList.size() * sizeof(std::string));
+      //closes write again
       close(pipe2[1]);
 
+      //read the list from pipe 2 from child process #2
+      close(pipe1[1]);
+      std::vector < std::string > recievedList(fileList.size());
+      read(pipe1[0], recievedList.data(), recievedList.size() * sizeof(std::string));
+      close(pipe1[0]);
 
-      waitpid(child1, NULL, 0);
-      waitpid(child2, NULL, 0);
+      std::cout << "Child process #2 recieved list from Child #1" << std::endl;
+      for (const auto & fileName: recievedList) {
+        std::cout << fileName << std::endl;
+      }
 
-  return 0;
-    
+      std::cout << "Child process #2 will create files from list of Child process #1 " << std::endl;
+      for (const auto & fileName: recievedList) {
+        std::ofstream file("/workspaces/CS4348_Project1/Directory1/" + fileName);
+        if (file.is_open()) {
+          file << "File: " << fileName << "created by Child Proccess #2" << std::endl;
+          file.close();
+          std::cout << "Filee created: " << fileName << std::endl;
+        } else {
+          std::cerr << "Failed to create file: " << fileName << std::endl;
+        }
+
+      }
+
+      exit(0);
+
+    }
+
+    //Parent Process will now close out pipes
+    close(pipe1[0]);
+    close(pipe1[1]);
+    close(pipe2[0]);
+    close(pipe2[1]);
+
+    //Parent process will have child proccess wait and finish
+    waitpid(child1, NULL, 0);
+    waitpid(child2, NULL, 0);
+
+    return 0;
+
   }
 
 }
-
