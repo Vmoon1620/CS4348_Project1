@@ -242,6 +242,7 @@ exit(0);
       waitpid(child1, NULL, 0);
       waitpid(child2, NULL, 0);
 
+  return 0;
     
   }
 
