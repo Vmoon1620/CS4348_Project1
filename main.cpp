@@ -32,6 +32,19 @@ In your code you should not make any assumption about the size of files.
 int main(int argc, char * argv[]) {
 
   pid_t child1, child2;
+  int pipe1[2], pipe2[2];
+
+  //creating pipe #1
+  if(pipe(pipe1) == -1){
+    std::cerr << "filaed to create pipe1" << std::endl;
+    return 1;
+  }
+
+  if(pipe(pipe2) == -1){
+    std::cerr << "failed to create pipe #2" << std::endl;
+    return 1;
+  }
+
 
   child1 = fork();
 
@@ -93,6 +106,26 @@ int main(int argc, char * argv[]) {
     }
     std::cout << std::endl;
 
+//writing the list above to pipe #1
+//close the reading side 
+close(pipe1[0]);
+write(pipe1[1], fileList.data(), fileList.size() * sizeof(std::string)); 
+//closes write again
+close(pipe1[1]);
+
+//read the list from pipe 2 from child process #2
+close(pipe2[1]);
+std::vector<std::string> recievedList(fileList.size());
+read(pipe2[0], recievedList.data(), recievedList.size() * sizeof(std::string));
+close(pipe2[0]);
+
+std::cout << "Child process #1 recieved list from Child #2" << std::endl;
+for (const auto& fileName : recievedList){
+  std::cout << fileName << std::endl;
+}
+
+
+
   } else {
     child2 = fork();
 
@@ -152,11 +185,35 @@ int main(int argc, char * argv[]) {
     }
     std::cout << std::endl;
 
-    } else {
+    close(pipe2[0]);
+write(pipe2[1], fileList.data(), fileList.size() * sizeof(std::string)); 
+//closes write again
+close(pipe2[1]);
+
+//read the list from pipe 2 from child process #2
+close(pipe1[1]);
+std::vector<std::string> recievedList(fileList.size());
+read(pipe1[0], recievedList.data(), recievedList.size() * sizeof(std::string));
+close(pipe1[0]);
+
+std::cout << "Child process #2 recieved list from Child #1" << std::endl;
+for (const auto& fileName : recievedList){
+  std::cout << fileName << std::endl;
+}
+
+    } 
+
+      close(pipe1[0]);
+      close(pipe1[1]);
+      close(pipe2[0]);
+      close(pipe2[1]);
+
+      
       waitpid(child1, NULL, 0);
       waitpid(child2, NULL, 0);
 
-    }
+    
   }
+
 }
 
